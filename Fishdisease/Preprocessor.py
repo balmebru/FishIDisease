@@ -75,6 +75,7 @@ class Preprocessor:
         ax[1].axis("off")
         plt.show()
 
+        
         return
 
     def detect_fish(self,image):
