@@ -16,7 +16,7 @@ class Segmenter:
         pass
 
     def segment_fish(self, image):
-        pass
+        return image
 
     def extract_mask(self, segmented_image):
         pass
