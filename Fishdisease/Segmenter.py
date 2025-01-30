@@ -8,6 +8,8 @@ import numpy as np
 from typing import List, Dict, Tuple
 from matplotlib import pyplot as plt
 
+
+
 class Segmenter:
     def __init__(self):
         pass
@@ -36,7 +38,7 @@ class Segmenter:
     
     
 
-    def segment_pictures_with_input_prompt(self, sam_model_path: str, image_path: str, input_prompt = [0.5, 0.5],show=False):
+    def segment_pictures_with_input_prompt(self, sam_model_path: str, image_path: str, input_prompt = [0.5, 0.6],show=False):
         """
         This function uses the SAM model to segment objects in images based on an input prompt.
         
@@ -58,6 +60,10 @@ class Segmenter:
                 print(f"Failed to read image: {image_full_path}")
                 continue
 
+            # check if the image a jpeg otherwise continue
+            if image_full_path.endswith('.jpeg'):
+                continue
+
             predictor.set_image(image)
             height, width, _ = image.shape
 
@@ -75,7 +81,9 @@ class Segmenter:
             # Extract contours from the mask
             mask = masks[0]
             contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+            if contours:
+                largest_contour = max(contours, key=cv2.contourArea)
+                contours = [largest_contour]
             if show:
                 for i, (mask, score) in enumerate(zip(masks, scores)):
                     plt.figure(figsize=(10,10))
@@ -89,6 +97,10 @@ class Segmenter:
             # Save contours to YOLOv8 format
             output_file_path = os.path.splitext(image_full_path)[0] + ".txt"
             self.save_sam_to_yolov8_format(contours, (height, width), output_file_path)
+            # Save binary mask
+            binary_mask_path = os.path.splitext(image_full_path)[0] + "_mask.npy"
+            self.save_binary_mask(mask, binary_mask_path)
+
 
     def save_sam_to_yolov8_format(self, contours: List[np.ndarray], image_shape: Tuple[int, int], output_path: str, class_id: int = 1) -> None:
         """
@@ -132,3 +144,14 @@ class Segmenter:
         neg_points = coords[labels==0]
         ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
         ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)  
+
+    
+    def save_binary_mask(self, mask: np.ndarray, output_path: str) -> None:
+        """
+        Save the binary mask as a NumPy file.
+
+        Args:
+            mask (np.ndarray): Binary mask to save.
+            output_path (str): Path to save the binary mask.
+        """
+        np.save(output_path, mask.astype(np.uint8))
