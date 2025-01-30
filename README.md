@@ -46,6 +46,7 @@ This step uses the fine-tuned model to detect and segment fish in each frame. Im
     - Option 2: Apply the YOLO model for detection and SAM2 for segmentation if more complex mask annotations are required.
 - Extract Mask: Generate and store the segmentation mask for further analysis.
 - Extract Low-Level Features: Measure fish attributes such as redness, size, color patterns, or other relevant indicators for disease detection.
+![First_segmentation_mask_with_prompt](https://github.com/user-attachments/assets/1bf02f43-06bf-44a2-871b-c46828498721)
 
   
 # Disease ID 
