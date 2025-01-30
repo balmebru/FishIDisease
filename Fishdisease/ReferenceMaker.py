@@ -17,15 +17,16 @@ class ReferenceMaker:
         Detect and segment the reference object in an image
         
         """
-        mask = self.segment_fish.detect_fish(image)  
+        mask = Segmenter.segment_fish(image)  
         if mask is None:
             return None, None
         return mask
 
-    def compute_correction_factors(self, image, reference_mask):
+    def compute_correction_factors(self, image):
         """
         Computing brightness and colr correction factors
         """
+        reference_mask = self.detect_reference_object(image)  
         ref_region = cv2.bitwise_and(image,image,mask= reference_mask)
         ## brightness
         avg_b = np.mean(ref_region)
@@ -41,11 +42,12 @@ class ReferenceMaker:
         return b_factor, (r_factor, g_factor, b_factor)
     
 
-    def apply(self, image, b_factor, c_factors):
+    def apply(self, image):
 
         """
         applying the computed factors to image
         """
+        b_factor, c_factors = self.compute_correction_factors(self, image)
         r_factor, g_factor, b_factor = c_factors
         corrected = cv2.merge([
             np.clip(image[..., 0] * b_factor, 0, 255).astype(np.uint8),

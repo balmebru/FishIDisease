@@ -1,15 +1,43 @@
 # FishIDisease
+
+![License](https://img.shields.io/badge/License-GNU-blue?style=for-the-badge)
+![BeHappyFish](https://img.shields.io/badge/Project-BeHappyFish-purple?style=for-the-badge)
+[![VERSION](https://img.shields.io/badge/VERSION-0.1.0-COLOR.svg?style=for-the-badge&logo=LOGO)](<LINK>)
+![Build Status](https://img.shields.io/badge/build-failing-red?style=for-the-badge)
+![Container Size](https://img.shields.io/badge/Container%20Size-<1GB-blue?style=for-the-badge&logo=docker)
+![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)
+![YOLO](https://img.shields.io/badge/Yolo-0078D7?style=for-the-badge&logo=Yolo&logoColor=white)
+![AI](https://img.shields.io/badge/AI-0078D7?style=for-the-badge&logo=AI&logoColor=white)
+ 
+
+## Build the workspace
+
+Unzip or clone the [project file](https://github.com/balmebru/FishIDisease) 
+
+Ensure that your Docker service is running, then open the project folder with VS Code.
+
+VS Code will propmt you to reopen as a container. Accept and watch the logs on terminal
+
+## Background
+
 Functions and models to Identify diseased fish and their affliction
 
 The main functionality is divided into several parts:
 
-Preprocessing: Prepare input images for analysis.
-Fish Identification and Segmentation: Detect and isolate the fish from the background.
-Lighting Correction: Adjust for lighting conditions using a reference object to ensure robust segmentation and disease identification.
-Disease Localization: Identify and highlight diseased areas within the segmented fish masks.
+- Preprocessing: Prepare input images for analysis.
+
+- Fish Identification and Segmentation: Detect and isolate the fish from the background.
+
+- Lighting Correction: Adjust for lighting conditions using a reference object to ensure robust segmentation and disease identification.
+
+- Disease Localization: Identify and highlight diseased areas within the segmented fish masks.
+
 The core functionality will be implemented in the FishIDisease class, which orchestrates these steps. The pipeline takes low-framerate video footage from aquaculture environments as input and outputs comprehensive information about the health status of the fish. Definitions for specific health metrics and disease classification criteria are yet to be finalized.
 
-# Preprocessor
+
+### Preprocessor
 
 
 Ideas and popular methods for preprocessing the image are
@@ -23,7 +51,7 @@ Ideas and popular methods for preprocessing the image are
 
 -> decide which methods to use (high prio)
 
-# ReferenceMaker
+### ReferenceMaker
 
 Should Detect a Reference Image and Help with Lighting and Color Correction
 The input will be a low-framerate video, and the output will provide reference measures for lighting and color (potentially size as well).
@@ -35,7 +63,7 @@ The input will be a low-framerate video, and the output will provide reference m
     - Color Balance: Calculate the RGB channel means from the reference object and normalize the image to achieve consistent color representation.
     - Size Normalization (if needed): Measure the reference object's bounding box dimensions and scale images for consistent object sizes during analysis.
 
-# Identification and Segmentation
+### Identification and Segmentation
 
 This step uses the fine-tuned model to detect and segment fish in each frame. Image validation is performed at this stage.
 
@@ -51,11 +79,17 @@ This step uses the fine-tuned model to detect and segment fish in each frame. Im
 Progress report:
 
 - yolov11 detection and segmentation did not work --> switched to pormpt based mask segmentation with sam
-- 
+- yolov11 detection plus sam2 segmentation works now --> start to identify fish and segment with sam2
+
+
+Below the SAM output and the prompted point:
 ![First_segmentation_mask_with_prompt](https://github.com/user-attachments/assets/1bf02f43-06bf-44a2-871b-c46828498721)
 
+
+
+
   
-# Disease ID 
+### Disease ID 
 The main functionality processes the information extracted during the identification and segmentation step to classify fish health status.
 
 - Input Features: Define based on low-level information extracted, such as redness levels, size anomalies, or abnormal color patterns.
@@ -65,7 +99,7 @@ The main functionality processes the information extracted during the identifica
     - Clustering methods (such as k-means) to identify natural groupings in feature data.
     - Outlier Detection: Flag highly abnormal patterns as potential "unknown" disease categories for manual review.
 
-# High level representation (?)
+### High level representation (?)
 
 To make the output actionable, the information needs to be presented in a clear and user-friendly manner.
 
@@ -74,7 +108,7 @@ Information Presentation:
 - Tabular summaries for batch analysis, including health scores, detected issues, and key attributes like redness levels or size deviations.
 - Alerts or flags for critical health concerns.
 
-# Connect sensor information to the Image (?)
+### Connect sensor information to the Image (?)
 
 Linking sensor data with image analysis can provide context for environmental conditions affecting fish health.
 
@@ -90,7 +124,7 @@ Use metadata fusion techniques to correlate sensor values with observed health i
 
 
 
-# Dataset description
+### Dataset description
 
 The main data is collected as images from a aquaculture in switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore the mask extraction should be somewhat easy.
 The dataset contains different pictures:
