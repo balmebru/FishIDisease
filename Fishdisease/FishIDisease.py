@@ -79,3 +79,17 @@ class FishIDisease:
                 cv2.imwrite(output_path, img_with_contours)
 
         print(f"Segmentation results saved in: {output_dir}")
+
+
+    def run_middle_segementation(self,sam_model_path,image_path,show=False):
+
+        """
+        Image path is a folder
+        
+        """
+        seg= Segmenter()
+
+        seg.segment_pictures_with_input_prompt(sam_model_path,image_path,show=show)
+
+
+        return

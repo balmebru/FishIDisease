@@ -6,6 +6,7 @@ import cv2
 from segment_anything import sam_model_registry, SamPredictor
 import numpy as np
 from typing import List, Dict, Tuple
+from matplotlib import pyplot as plt
 
 class Segmenter:
     def __init__(self):
@@ -35,7 +36,7 @@ class Segmenter:
     
     
 
-    def segment_pictures_with_input_prompt(self, sam_model_path: str, image_path: str, input_prompt: str):
+    def segment_pictures_with_input_prompt(self, sam_model_path: str, image_path: str, input_prompt = [0.5, 0.5],show=False):
         """
         This function uses the SAM model to segment objects in images based on an input prompt.
         
@@ -61,7 +62,7 @@ class Segmenter:
             height, width, _ = image.shape
 
             # Define prompt coordinates relative to image dimensions (here in the middle)
-            input_point = np.array([[0.5 * width, 0.5 * height]])
+            input_point = np.array([[input_prompt[0] * width, input_prompt[1] * height]])
             input_label = np.array([1])
 
             # Perform segmentation
@@ -74,6 +75,16 @@ class Segmenter:
             # Extract contours from the mask
             mask = masks[0]
             contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            if show:
+                for i, (mask, score) in enumerate(zip(masks, scores)):
+                    plt.figure(figsize=(10,10))
+                    plt.imshow(image)
+                    self.show_mask(mask, plt.gca())
+                    self.show_points(input_point, input_label, plt.gca())
+                    plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
+                    plt.axis('off')
+                    plt.show()  
 
             # Save contours to YOLOv8 format
             output_file_path = os.path.splitext(image_full_path)[0] + ".txt"
@@ -106,3 +117,18 @@ class Segmenter:
 
 
         return
+    
+    def show_mask(self,mask, ax, random_color=False):
+        if random_color:
+            color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
+        else:
+            color = np.array([30/255, 144/255, 255/255, 0.6])
+        h, w = mask.shape[-2:]
+        mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
+        ax.imshow(mask_image)
+
+    def show_points(self,coords, labels, ax, marker_size=375):
+        pos_points = coords[labels==1]
+        neg_points = coords[labels==0]
+        ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
+        ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)  
