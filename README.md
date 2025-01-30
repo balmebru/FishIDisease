@@ -51,8 +51,14 @@ This step uses the fine-tuned model to detect and segment fish in each frame. Im
 Progress report:
 
 - yolov11 detection and segmentation did not work --> switched to pormpt based mask segmentation with sam
-- 
+- yolov11 detection plus sam2 segmentation works now --> start to identify fish and segment with sam2
+
+
+Below the SAM output and the prompted point:
 ![First_segmentation_mask_with_prompt](https://github.com/user-attachments/assets/1bf02f43-06bf-44a2-871b-c46828498721)
+
+
+
 
   
 # Disease ID 
