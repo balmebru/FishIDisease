@@ -12,7 +12,7 @@
 ![AI](https://img.shields.io/badge/AI-0078D7?style=for-the-badge&logo=AI&logoColor=white)
  
 
-## Build the workspace
+## Build the workspace
 
 Unzip or clone the [project file](https://github.com/balmebru/FishIDisease) 
 
