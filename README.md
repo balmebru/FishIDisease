@@ -46,6 +46,12 @@ This step uses the fine-tuned model to detect and segment fish in each frame. Im
     - Option 2: Apply the YOLO model for detection and SAM2 for segmentation if more complex mask annotations are required.
 - Extract Mask: Generate and store the segmentation mask for further analysis.
 - Extract Low-Level Features: Measure fish attributes such as redness, size, color patterns, or other relevant indicators for disease detection.
+
+
+Progress report:
+
+- yolov11 detection and segmentation did not work --> switched to pormpt based mask segmentation with sam
+- 
 ![First_segmentation_mask_with_prompt](https://github.com/user-attachments/assets/1bf02f43-06bf-44a2-871b-c46828498721)
 
   
@@ -81,4 +87,24 @@ Common Sensors:
 Potential Integration:
 Synchronize sensor readings with video timestamps to contextualize disease detection.
 Use metadata fusion techniques to correlate sensor values with observed health issues.
+
+
+
+# Dataset description
+
+The main data is collected as images from a aquaculture in switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore the mask extraction should be somewhat easy.
+The dataset contains different pictures:
+
+- Total data
+      -  FishDisease
+          - EyeDisease
+              - healthy
+              - diseased
+          - Weight
+              - OverOrUnder Weight
+              - Bleeding vs Bloodcirculation
+      - FishCount
+          - videos from inside the tank
+
+  
 
