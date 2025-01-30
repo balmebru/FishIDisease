@@ -82,3 +82,23 @@ Potential Integration:
 Synchronize sensor readings with video timestamps to contextualize disease detection.
 Use metadata fusion techniques to correlate sensor values with observed health issues.
 
+
+
+# Dataset description
+
+The main data is collected as images from a aquaculture in switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore the mask extraction should be somewhat easy.
+The dataset contains different pictures:
+
+- Total data
+      -  FishDisease
+          - EyeDisease
+              - healthy
+              - diseased
+          - Weight
+              - OverOrUnder Weight
+              - Bleeding vs Bloodcirculation
+      - FishCount
+          - videos from inside the tank
+
+  
+
