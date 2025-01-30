@@ -1,0 +1,54 @@
+# Ensure consistent line endings
+* text=auto
+
+# Shell scripts
+*.sh text eol=lf
+
+# Dockerfile
+Dockerfile text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Jupyter Notebooks
+*.ipynb text eol=lf
+
+# JSON files
+*.json text eol=lf
+
+# YAML files
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Markdown files
+*.md text eol=lf
+
+# CSV files
+*.csv text eol=lf
+
+# Configuration files
+*.ini text eol=lf
+*.cfg text eol=lf
+
+# Text files
+*.txt text eol=lf
+
+# Ignore binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.tiff binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.bz2 binary
+*.xz binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary

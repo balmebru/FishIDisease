@@ -1,0 +1,13 @@
+{
+    "name": "FishIDisease Dev Container",
+    "dockerFile": "Dockerfile",
+    "context": "..",
+    "workspaceFolder": "/workspace",
+    "extensions": [
+      "ms-python.python",
+      "ms-python.vscode-pylance"
+    ],
+    "settings": {
+      "python.pythonPath": "/usr/local/bin/python"
+    }
+  }
