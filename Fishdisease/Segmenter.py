@@ -1,6 +1,6 @@
 
 import os
-from ultralytics.data.annotator import auto_annotate
+from ultralytics.data.annotator import auto_annotate, YOLO
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 import cv2
 from segment_anything import sam_model_registry, SamPredictor
@@ -100,6 +100,84 @@ class Segmenter:
             # Save binary mask
             binary_mask_path = os.path.splitext(image_full_path)[0] + "_mask.npy"
             self.save_binary_mask(mask, binary_mask_path)
+
+
+
+    def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
+        """
+        This function uses the yolov11 segmentation model to identify fish in images. In this function draws a
+        bounding box around the fish then uses x,y coordinates to pass the prompt to the SAM model to segment the fish.
+        The x,y coordinates are approximatly at the location where a fish eye is usually located.
+        
+        Args:
+            image_path (str): Path to the input image.
+            sam_model_path (str): Path to the SAM model checkpoint.
+            yolo_model_path (str): Path to the YOLOv11 model checkpoint.
+            show (bool): Whether to display the results.
+        """
+        
+        # Load the YOLOv11 model
+        yolo_model = YOLO(yolo_model_path)
+        
+        # Load the SAM model
+        sam = sam_model_registry["vit_b"](checkpoint=sam_model_path)
+        sam_predictor = SamPredictor(sam)
+        
+        # Load the image
+        image = cv2.imread(image_path)
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        # Run YOLOv11 to get fish bounding boxes
+        results = yolo_model(image_rgb)
+        detections = results.xyxy[0].numpy()  # Get detections in xyxy format
+        
+        # Iterate over each detection
+        for detection in detections:
+            x1, y1, x2, y2, conf, cls = detection  # Extract bounding box coordinates
+            
+            # Estimate the eye location (top-left corner of the bounding box)
+            eye_x = x1 + (x2 - x1) * 0.2  # 20% from the left edge of the bbox
+            eye_y = y1 + (y2 - y1) * 0.2  # 20% from the top edge of the bbox
+            
+            # Convert eye location to relative coordinates (normalized to [0, 1])
+            image_height, image_width, _ = image.shape
+            eye_x_rel = eye_x / image_width
+            eye_y_rel = eye_y / image_height
+            
+            # Prepare the input prompt for SAM
+            input_point = np.array([[eye_x, eye_y]])  # SAM expects absolute coordinates
+            input_label = np.array([1])  # 1 indicates a foreground point
+            
+            # Run SAM to segment the fish
+            sam_predictor.set_image(image_rgb)
+            masks, scores, _ = sam_predictor.predict(
+                point_coords=input_point,
+                point_labels=input_label,
+                multimask_output=True,
+            )
+            
+            # Get the best mask (highest score)
+            best_mask = masks[np.argmax(scores)]
+            
+            # Optionally display the results
+            if show:
+                # Draw the bounding box
+                cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                
+                # Draw the estimated eye location
+                cv2.circle(image, (int(eye_x), int(eye_y)), 5, (0, 0, 255), -1)
+                
+                # Overlay the segmentation mask
+                color_mask = np.zeros_like(image)
+                color_mask[best_mask > 0] = [0, 255, 0]  # Green mask
+                image = cv2.addWeighted(image, 1, color_mask, 0.5, 0)
+                
+                # Show the image
+                cv2.imshow("Fish Eye Autoannotation", image)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+
+
 
 
     def save_sam_to_yolov8_format(self, contours: List[np.ndarray], image_shape: Tuple[int, int], output_path: str, class_id: int = 1) -> None:

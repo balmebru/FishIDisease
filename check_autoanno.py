@@ -11,7 +11,7 @@ from Fishdisease import FishIDisease
 instance = FishIDisease()
 
 
-image_dir= r"C:\Users\bruno\OneDrive\Desktop\Bruno\Brunos_capitol\Dep.IT\Data\FIshID_data\EyeMalformations\EyeHealthy"
+image_dir= r"C:\Users\bruno\OneDrive\Desktop\Bruno\Brunos_capitol\Dep.IT\Data\FIshID_data\BleedingVSBloodCirculation_root_dor\BleedingVSBloodCirculation"
 
-segmentation_dir = r"C:\Users\bruno\OneDrive\Desktop\Bruno\Brunos_capitol\Dep.IT\Data\FIshID_data\EyeMalformations\EyeHealthy_segmenter_mask"
+segmentation_dir = r"C:\Users\bruno\OneDrive\Desktop\Bruno\Brunos_capitol\Dep.IT\Data\FIshID_data\BleedingVSBloodCirculation_root_dor\BleedingVSBloodCirculation_segmentation"
 instance.view_segmentation_after_autoanno(image_dir=image_dir,segmentation_dir=segmentation_dir)
