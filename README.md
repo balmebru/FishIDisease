@@ -11,7 +11,8 @@ The core functionality will be implemented in the FishIDisease class, which orch
 
 # Preprocessor
 
-Ideas and popular methods for preprocessing the image are:
+
+Ideas and popular methods for preprocessing the image are
 
 - Background Subtraction: Remove non-relevant background elements to isolate the region of interest (ROI).
 - Selective Denoising: Apply a median filter with a 5x5 kernel for noise reduction while preserving edges. (Reference: Jin, L., & Liang, H. (2017). Deep learning for underwater image recognition in small sample size situations. OCEANS 2017 - Aberdeen, 1–4. https://doi.org/10.1109/OCEANSE.2017.8084645)
