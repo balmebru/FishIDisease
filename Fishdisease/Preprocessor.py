@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import pywt
-from Segmenter import Segmenter
-from ReferenceMaker import ReferenceMaker
+from .ReferenceMaker import ReferenceMaker
+
 
 class Preprocessor:
     def __init__(self):

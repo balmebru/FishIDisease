@@ -20,6 +20,29 @@ Ensure that your Docker service is running, then open the project folder with VS
 
 VS Code will propmt you to reopen as a container. Accept and watch the logs on terminal
 
+### Run Tests
+
+1. Run all tests:
+
+```bash
+python -m unittest discover -s tests
+```
+2. Run all tests in a specific file:
+
+```bash
+python -m unittest tests.test_fish_idisease
+```
+
+3. Run a specific test case:
+```bash
+python -m unittest tests.test_fish_idisease.TestFishIDisease
+```
+
+4. Run a specific test method:
+```bash
+python -m unittest tests.test_fish_idisease.TestFishIDisease.test_view_segmentation_after_autoanno
+```
+
 ## Background
 
 Functions and models to Identify diseased fish and their affliction
@@ -141,4 +164,65 @@ The dataset contains different pictures:
           - videos from inside the tank
 
   
+
+
+
+## Project Structure
+
+- `Fishdisease/`: Source code for the project default `src`.
+- `models/`: Models for processing or prediction.
+- `scripts/`: Program files to run processing or checks
+- `tests/`: Unit tests for the project.
+- `assets/`: Contains images and other assets for the project.
+- `requirements.txt`: List of dependencies.
+- `README.md`: Project documentation.
+- `.devcontainer/`: Configuration for the development container.
+
+```
+workspace/
+│
+├── .devcontainer/
+│   ├── devcontainer.json
+│   └── Dockerfile
+│
+├── Fishdisease/
+│   ├── Preprocessor.py
+│   ├── DiseaseID.py
+│   ├── FishDisease.py
+│   ├── Preprocessor.py
+│   ├── ReferenceMaker.py
+│   ├── Segmenter.py
+│   └── main.py
+│
+├── models/
+│   ├── FishCheckpoint_01.pt
+│   └── FishCheckpoint_segmenter_detection.pt
+│
+│
+├── scripts/
+│   ├── check_autoanno.py
+│   ├── check_images_and_mask.py
+│   ├── run_autoannotator.py
+│   ├── run_fisheye_autoannotate.py
+│   └── run_middle_segmenter.py
+│
+├── tests/
+│   ├── test_disease_id.py
+│   ├── test_fish_idisease.py
+│   ├── test_image_processing.py
+│   ├── test_preprocessor.py
+│   ├── test_reference_maker.py
+│   └── test_segmenter.py
+│
+├── assets/
+│   └── images/
+│       └── LINDA/
+│           └── EelisaHackathonDatasetsLinda/
+│               └── FishDiseaseZHAW/
+│                   └── BleedingVSBloodCirculation/
+│                       └── ZHAW Biocam_00_20240325095815.jpg
+│
+├── requirements.txt
+└── README.md
+```
 

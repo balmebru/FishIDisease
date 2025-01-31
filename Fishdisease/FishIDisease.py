@@ -1,9 +1,8 @@
-
-
-from Segmenter import Segmenter
 import os
 import cv2
 import numpy as np
+from .Segmenter import Segmenter
+
 class FishIDisease:
     def __init__(self):
         pass

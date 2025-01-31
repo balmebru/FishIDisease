@@ -18,5 +18,13 @@
               "python.formatting.provider": "black"
           }
       }
-  }
+  },
+  "mounts": [
+    {
+        "source": "${localWorkspaceFolder}", 
+        "target": "/workspace",
+        "type": "bind"
+    }
+    ]
+
 }

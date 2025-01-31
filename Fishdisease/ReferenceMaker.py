@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from Segmenter import Segmenter
+from .Segmenter import Segmenter
 
 
 class ReferenceMaker:
@@ -57,6 +57,7 @@ class ReferenceMaker:
         ])
         adjusted = np.clip(corrected * b_factor, 0, 255).astype(np.uint8)
         return adjusted
+    
     
     def resize_to_reference(self, image, ref_bbox, target_size=(100, 100)):
         """
