@@ -101,6 +101,9 @@ For the detector of diseased eyes around 10 image per instance (healthy and dise
 ![Eye_Detection](https://github.com/user-attachments/assets/9d3c10d8-65ad-43af-b574-5c69bbe40b29)
 
 
+The detection output was not really good unfortunatly. 
+
+
 ### Disease ID 
 The main functionality processes the information extracted during the identification and segmentation step to classify fish health status.
 
