@@ -191,52 +191,6 @@ class FishIDisease:
 
 
 
-    def remove_images_without_matching_txt(self,image_dir, mask_dir):
-        """
-        Removes image files from the image directory if they do not have a corresponding .txt file in the mask directory.
-
-        Args:
-            image_dir (str): Path to the directory containing image files.
-            mask_dir (str): Path to the directory containing mask files.
-        """
-        # Get base filenames without extensions
-        image_files = [f for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))]
-        mask_basenames = {os.path.splitext(f)[0] for f in os.listdir(mask_dir) if os.path.isfile(os.path.join(mask_dir, f))}
-
-        # Remove images without matching mask files
-        removed_count = 0
-        for image_file in image_files:
-            image_basename, _ = os.path.splitext(image_file)
-            if image_basename not in mask_basenames:
-                image_path = os.path.join(image_dir, image_file)
-                os.remove(image_path)
-                removed_count += 1
-
-        print(f"Removed {removed_count} image files without matching mask files.")
-
-
-    def remove_txt_without_matching_image(self,mask_dir, image_dir):
-        """
-        Removes text files from the mask directory if they do not have a corresponding image file in the image directory.
-
-        Args:
-            mask_dir (str): Path to the directory containing mask files.
-            image_dir (str): Path to the directory containing image files.
-        """
-        # Get base filenames without extensions
-        mask_files = [f for f in os.listdir(mask_dir) if os.path.isfile(os.path.join(mask_dir, f))]
-        image_basenames = {os.path.splitext(f)[0] for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))}
-
-        # Remove text files without matching image files
-        removed_count = 0
-        for mask_file in mask_files:
-            mask_basename, _ = os.path.splitext(mask_file)
-            if mask_basename not in image_basenames:
-                mask_path = os.path.join(mask_dir, mask_file)
-                os.remove(mask_path)
-                removed_count += 1
-
-        print(f"Removed {removed_count} mask files without matching image files.")
 
     def validate_and_sync_directories(self,dir1, dir2):
         """
@@ -278,19 +232,25 @@ class FishIDisease:
 
 
 
-    def autoannotate_fish_eyes_dir(self,image_dir):
+    def autoannotate_fish_eyes_dir(self,image_dir,sam_model_path,yolo_model_path,show=False,save_path=None):
 
         """
-        Uses the autoannotate_fish_eyes function to autoannotate all images in a directory.
+        Uses the autoannotate_fish_eyes function to autoannotate all images in a directory.¨
+
         """
+
+        for image in os.listdir(image_dir):
+            if image.endswith(".jpg") or image.endswith(".png"):
+                image_path = os.path.join(image_dir, image)
+                self.autoannotate_fish_eyes(image_path,sam_model_path,yolo_model_path,save_path=save_path,show=show)
         return
 
 
-    def autoannotate_fish_eyes(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
+    def autoannotate_fish_eyes(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False,save_path=None):
 
         
         seg_instace = Segmenter()
-        best_mask = seg_instace.fish_eye_autoannotate_with_SAM(image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
+        best_mask = seg_instace.fish_eye_autoannotate_with_SAM(image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show,save_path=save_path)
         return
     
 

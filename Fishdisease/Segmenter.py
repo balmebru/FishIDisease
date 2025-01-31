@@ -131,11 +131,15 @@ class Segmenter:
         # Run YOLOv11 to get fish bounding boxes
         results = yolo_model(image_rgb)
         
+        # only keep the highest confidence detection
+        results = [result[0] for result in results]
+
+
+
         # Iterate over each detection
         for result in results:
             # Access the boxes object
             boxes = result.boxes
-            yolo_resized_image = result.imgs[0]
             # Extract bounding box coordinates, confidence, and class IDs
             for box in boxes:
                 x1, y1, x2, y2 = box.xyxy[0].tolist()  # Get bounding box coordinates in xyxy format
@@ -143,7 +147,7 @@ class Segmenter:
                 cls = box.cls[0].item()  # Get class ID
                 
                 # Estimate the eye location (top-left corner of the bounding box)
-                eye_x = x1 + (x2 - x1) * 0.035  # 5% from the left edge of the bbox
+                eye_x = x1 + (x2 - x1) * 0.03  # 5% from the left edge of the bbox
                 eye_y = y1 + (y2 - y1) * 0.4  # 30% from the top edge of the bbox
                 
                 # Convert eye location to relative coordinates (normalized to [0, 1])
@@ -165,10 +169,11 @@ class Segmenter:
                 
                 # Get the best mask (highest score)
                 best_mask = masks[np.argmax(scores)]
-                
+                size_of_mask = best_mask.sum()
+                check_value = 0.01 * image_height * image_width
                 # if the mask is bigger than 10 percent of the image size request a input prompt form the user by
                 # showing the image and then save the click location as the input prompt
-                if best_mask.sum() > 0.1 * image_height * image_width:
+                if size_of_mask > check_value:
                     input_point = self.get_new_input_point_by_user(image)
                     input_label = np.array([1])  # 1 indicates a foreground point
                     masks, scores, _ = sam_predictor.predict(
@@ -199,8 +204,17 @@ class Segmenter:
                     # Show the image
                     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
-                    # save the mask in a file
-
+                # save the mask in a file
+                    # Save contours to YOLOv8 format
+                contours, _ = cv2.findContours(best_mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    largest_contour = max(contours, key=cv2.contourArea)
+                    contours = [largest_contour]
+                output_file_path = os.path.splitext(image_path)[0] + ".txt"
+                self.save_sam_to_yolov8_format(contours, (image_height, image_width), output_file_path)
+                # Save binary mask
+                binary_mask_path = os.path.splitext(image_path)[0] + "_mask.npy"
+                self.save_binary_mask(best_mask, binary_mask_path)
 
         return best_mask
 
@@ -235,7 +249,7 @@ class Segmenter:
 
         return np.array(input_point)
     
-    
+
     def predict_image(self,image_path, yolo_model_path, show=False, save_path=None):
         """
         Predicts objects in an image using a YOLOv11 model.
