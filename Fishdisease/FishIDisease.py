@@ -1,7 +1,12 @@
 import os
 import cv2
 import numpy as np
+<<<<<<< HEAD
 from .Segmenter import Segmenter
+=======
+import shutil
+
+>>>>>>> 7f70f71 (Added functionality for syncing dirs)
 
 class FishIDisease:
     def __init__(self):
@@ -91,4 +96,191 @@ class FishIDisease:
         seg.segment_pictures_with_input_prompt(sam_model_path,image_path,show=show)
 
 
+        return
+    
+
+    def video_splitter(self, video_path: str, output_dir: str, frame_rate: int):
+        """
+        Splits a video into individual frames at the specified frame rate.
+
+        Args:
+            video_path (str): Path to the input video file.
+            output_dir (str): Directory where the extracted frames will be saved.
+            frame_rate (int): Number of frames to save per second.
+
+        """
+        # Check if output directory exists; create if it doesn't
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Load the video
+        video_capture = cv2.VideoCapture(video_path)
+
+        if not video_capture.isOpened():
+            print("Error: Unable to open video.")
+            return
+
+        # Get video properties
+        video_fps = int(video_capture.get(cv2.CAP_PROP_FPS))
+        frame_interval = max(1, video_fps // frame_rate)
+        frame_count = 0
+
+        while True:
+            success, frame = video_capture.read()
+            if not success:
+                break
+
+            # Save the frame if it's on the correct interval
+            if frame_count % frame_interval == 0:
+                frame_filename = os.path.join(output_dir, f"frame_{frame_count:05d}.jpg")
+                cv2.imwrite(frame_filename, frame)
+                print(f"Saved: {frame_filename}")
+
+            frame_count += 1
+
+        video_capture.release()
+        print("Video splitting complete.")
+
+
+
+    def auto_split_and_move(self, image_dir_path, mask_dir_path, output_dir_path_images, output_dir_path_mask, interval):
+        """
+        Moves every interval-th image and mask from the input directories to the output directories.
+        
+        Args:
+            image_dir_path (str): Path to the directory containing images.
+            mask_dir_path (str): Path to the directory containing masks.
+            output_dir_path_images (str): Path to the target directory for images.
+            output_dir_path_mask (str): Path to the target directory for masks.
+            interval (int): Defines the step size for selecting images and masks.
+        """
+        # Ensure interval is valid
+        if interval <= 0:
+            raise ValueError("Interval must be a positive integer.")
+
+        # Ensure output directories exist
+        os.makedirs(output_dir_path_images, exist_ok=True)
+        os.makedirs(output_dir_path_mask, exist_ok=True)
+
+        # Get sorted lists of images and masks
+        image_files = sorted([f for f in os.listdir(image_dir_path) if os.path.isfile(os.path.join(image_dir_path, f))])
+        mask_files = sorted([f for f in os.listdir(mask_dir_path) if os.path.isfile(os.path.join(mask_dir_path, f))])
+
+        # Create a set of mask base names for quick lookup
+        mask_base_names = {os.path.splitext(f)[0] for f in mask_files}
+
+        # Move files at specified interval
+        for idx in range(0, len(image_files), interval):
+            image_file = image_files[idx]
+            image_base_name = os.path.splitext(image_file)[0]
+
+            # Check for a matching mask by base name
+            if image_base_name in mask_base_names:
+                corresponding_mask_file = next(f for f in mask_files if os.path.splitext(f)[0] == image_base_name)
+
+                # Paths for input and output
+                src_image_path = os.path.join(image_dir_path, image_file)
+                src_mask_path = os.path.join(mask_dir_path, corresponding_mask_file)
+                dest_image_path = os.path.join(output_dir_path_images, image_file)
+                dest_mask_path = os.path.join(output_dir_path_mask, corresponding_mask_file)
+
+                # Move image and mask
+                shutil.move(src_image_path, dest_image_path)
+                shutil.move(src_mask_path, dest_mask_path)
+
+        print("Files moved successfully.")
+
+
+
+    def remove_images_without_matching_txt(self,image_dir, mask_dir):
+        """
+        Removes image files from the image directory if they do not have a corresponding .txt file in the mask directory.
+
+        Args:
+            image_dir (str): Path to the directory containing image files.
+            mask_dir (str): Path to the directory containing mask files.
+        """
+        # Get base filenames without extensions
+        image_files = [f for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))]
+        mask_basenames = {os.path.splitext(f)[0] for f in os.listdir(mask_dir) if os.path.isfile(os.path.join(mask_dir, f))}
+
+        # Remove images without matching mask files
+        removed_count = 0
+        for image_file in image_files:
+            image_basename, _ = os.path.splitext(image_file)
+            if image_basename not in mask_basenames:
+                image_path = os.path.join(image_dir, image_file)
+                os.remove(image_path)
+                removed_count += 1
+
+        print(f"Removed {removed_count} image files without matching mask files.")
+
+
+    def remove_txt_without_matching_image(self,mask_dir, image_dir):
+        """
+        Removes text files from the mask directory if they do not have a corresponding image file in the image directory.
+
+        Args:
+            mask_dir (str): Path to the directory containing mask files.
+            image_dir (str): Path to the directory containing image files.
+        """
+        # Get base filenames without extensions
+        mask_files = [f for f in os.listdir(mask_dir) if os.path.isfile(os.path.join(mask_dir, f))]
+        image_basenames = {os.path.splitext(f)[0] for f in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, f))}
+
+        # Remove text files without matching image files
+        removed_count = 0
+        for mask_file in mask_files:
+            mask_basename, _ = os.path.splitext(mask_file)
+            if mask_basename not in image_basenames:
+                mask_path = os.path.join(mask_dir, mask_file)
+                os.remove(mask_path)
+                removed_count += 1
+
+        print(f"Removed {removed_count} mask files without matching image files.")
+
+    def validate_and_sync_directories(self,dir1, dir2):
+        """
+        Ensures that both directories have matching base filenames.
+        Removes files from either directory if they don't have a corresponding partner.
+
+        Args:
+            dir1 (str): Path to the first directory.
+            dir2 (str): Path to the second directory.
+        """
+        # Get base filenames without extensions
+        files1 = [f for f in os.listdir(dir1) if os.path.isfile(os.path.join(dir1, f))]
+        files2 = [f for f in os.listdir(dir2) if os.path.isfile(os.path.join(dir2, f))]
+
+        basenames1 = {os.path.splitext(f)[0] for f in files1}
+        basenames2 = {os.path.splitext(f)[0] for f in files2}
+
+        # Identify unmatched basenames
+        unmatched_in_dir1 = basenames1 - basenames2
+        unmatched_in_dir2 = basenames2 - basenames1
+
+        # Remove unmatched files from dir1
+        for file in files1:
+            basename, _ = os.path.splitext(file)
+            if basename in unmatched_in_dir1:
+                file_path = os.path.join(dir1, file)
+                os.remove(file_path)
+                print(f"Removed {file_path} from {dir1}")
+
+        # Remove unmatched files from dir2
+        for file in files2:
+            basename, _ = os.path.splitext(file)
+            if basename in unmatched_in_dir2:
+                file_path = os.path.join(dir2, file)
+                os.remove(file_path)
+                print(f"Removed {file_path} from {dir2}")
+
+        print("Validation and synchronization complete.")
+
+
+    def autoannotate_fish_eyes(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
+
+        
+        seg_instace = Segmenter()
+        seg_instace.fish_eye_autoannotate_with_SAM(self, image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
         return
