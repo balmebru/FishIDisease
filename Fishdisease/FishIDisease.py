@@ -13,8 +13,6 @@ class FishIDisease:
     def __init__(self):
         pass
 
-    def load_video(self, path: str):
-        pass
 
     def run_pipeline(self):
         pass
@@ -279,13 +277,34 @@ class FishIDisease:
         print("Validation and synchronization complete.")
 
 
+
+    def autoannotate_fish_eyes_dir(self,image_dir):
+
+        """
+        Uses the autoannotate_fish_eyes function to autoannotate all images in a directory.
+        """
+        return
+
+
     def autoannotate_fish_eyes(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
 
         
         seg_instace = Segmenter()
-        seg_instace.fish_eye_autoannotate_with_SAM(image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
+        best_mask = seg_instace.fish_eye_autoannotate_with_SAM(image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
         return
     
+
+    def predict_directory(self, image_dir, yolo_model_path,save_path, show=True):
+
+        seg_instace = Segmenter()
+
+        for image in os.listdir(image_dir):
+            image_path = os.path.join(image_dir, image)
+            save_image_path = os.path.join(save_path, image)    
+            predictions, segmentation_masks, results = seg_instace.predict_image(image_path, yolo_model_path,save_path=save_image_path,show=show)
+
+
+        return 
 
     def predict_image(self,image_path, yolo_model_path, show):
 

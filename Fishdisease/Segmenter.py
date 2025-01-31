@@ -103,7 +103,7 @@ class Segmenter:
 
 
 
-    def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
+    def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False, save_path=None):
         """
         This function uses the YOLOv11 segmentation model to identify fish in images. It draws a
         bounding box around the fish, then uses x,y coordinates to pass the prompt to the SAM model
@@ -128,14 +128,14 @@ class Segmenter:
         image = cv2.imread(image_path)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-        # Run YOLOv8 to get fish bounding boxes
+        # Run YOLOv11 to get fish bounding boxes
         results = yolo_model(image_rgb)
         
         # Iterate over each detection
         for result in results:
             # Access the boxes object
             boxes = result.boxes
-            
+            yolo_resized_image = result.imgs[0]
             # Extract bounding box coordinates, confidence, and class IDs
             for box in boxes:
                 x1, y1, x2, y2 = box.xyxy[0].tolist()  # Get bounding box coordinates in xyxy format
@@ -166,6 +166,17 @@ class Segmenter:
                 # Get the best mask (highest score)
                 best_mask = masks[np.argmax(scores)]
                 
+                # if the mask is bigger than 10 percent of the image size request a input prompt form the user by
+                # showing the image and then save the click location as the input prompt
+                if best_mask.sum() > 0.1 * image_height * image_width:
+                    input_point = self.get_new_input_point_by_user(image)
+                    input_label = np.array([1])  # 1 indicates a foreground point
+                    masks, scores, _ = sam_predictor.predict(
+                    point_coords=input_point,
+                    point_labels=input_label,
+                    multimask_output=True,
+                )
+                    best_mask = masks[np.argmax(scores)]
                 # Optionally display the results
                 if show:
                     # Draw the bounding box
@@ -188,9 +199,44 @@ class Segmenter:
                     # Show the image
                     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
+                    # save the mask in a file
 
 
-    def predict_image(self,image_path, yolo_model_path, show=False):
+        return best_mask
+
+    def get_new_input_point_by_user(self, image):
+        """
+        Opens the given image and captures a single user click as the input point.
+        The point is returned as a NumPy array suitable for SAM.
+
+        Args:
+            image (ndarray): The image in which the user will click.
+
+        Returns:
+            np.ndarray: The x, y coordinates of the click in the original image space.
+        """
+        fig, ax = plt.subplots()
+        ax.imshow(image)
+        ax.set_title("Click on the point you want to select")
+        input_point = []
+
+        # Event handler for capturing click
+        def on_click(event):
+            if event.xdata and event.ydata:
+                input_point.append((event.xdata, event.ydata))
+                plt.close()  # Close the plot after the first click
+
+        # Connect the click event to the handler
+        fig.canvas.mpl_connect('button_press_event', on_click)
+        plt.show()
+
+        if not input_point:
+            raise ValueError("No point selected by the user.")
+
+        return np.array(input_point)
+    
+    
+    def predict_image(self,image_path, yolo_model_path, show=False, save_path=None):
         """
         Predicts objects in an image using a YOLOv11 model.
 
@@ -198,6 +244,7 @@ class Segmenter:
             image_path (str): Path to the input image.
             yolo_model_path (str): Path to the YOLOv11 model file.
             show (bool): Whether to display the segmentation results. Default is False.
+            save_path (str): Path to save the image with overlays if specified. Default is None.
 
         Returns:
             predictions (list): A list of detected objects with their bounding boxes, labels, and confidence scores.
@@ -207,49 +254,40 @@ class Segmenter:
         model = YOLO(yolo_model_path)
 
         # Perform prediction
-        results = model(image_path)[0]  # Select the first batch result
+        results = model.predict(image_path,conf=0.1) # Select the first batch result
 
         # Extract bounding boxes, labels, and confidence scores
         predictions = []
-        for box in results.boxes:
-            label = model.names[int(box.cls)]
-            bbox = box.xyxy.tolist()[0]
-            confidence = box.conf.tolist()[0]
-            predictions.append({
-                'label': label,
-                'bbox': bbox,
-                'confidence': confidence
-            })
 
-        # Extract segmentation masks (if available)
-        segmentation_masks = []
-        if results.masks:
-            masks_data = results.masks.data.cpu().numpy()
-            for mask in masks_data:
-                segmentation_masks.append(mask)
+        for result in results:
 
-        # Display the results if requested
+            preprocessed_img = result.orig_shape
+            letterboxed_img = result.imgs[0]  # YOLO-preprocessed image
+            # Extract segmentation masks (if available)
+            segmentation_masks = []
+            if result.masks:
+                masks_data = result.masks.data.cpu().numpy()
+                for mask in masks_data:
+                    segmentation_masks.append(mask)
+
+
+            fig, ax = plt.subplots()
+            ax.imshow(letterboxed_img)
+            ax.axis('off')
+
+        # Overlay segmentation masks
+        for mask in segmentation_masks:
+            ax.imshow(mask, cmap='jet', alpha=0.3)
+
         if show:
-            img = cv2.imread(image_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            plt.imshow(img)
-            plt.axis('off')
-            for prediction in predictions:
-                x1, y1, x2, y2 = prediction['bbox']
-                plt.gca().add_patch(
-                    plt.Rectangle((x1, y1), x2 - x1, y2 - y1, 
-                                edgecolor='red', linewidth=2, fill=False)
-                )
-                plt.text(x1, y1 - 5, f"{prediction['label']} {prediction['confidence']:.2f}", 
-                        color='white', backgroundcolor='red', fontsize=8)
-            
-            # Overlay segmentation masks
-            for mask in segmentation_masks:
-                plt.imshow(mask, cmap='jet', alpha=0.3)
-            
             plt.show()
 
-        return predictions, segmentation_masks,results
+        # Save the overlay image if a path is specified
+        if save_path:
+            fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
+            plt.close(fig)
+
+        return predictions, segmentation_masks, results
 
     def save_sam_to_yolov8_format(self, contours: List[np.ndarray], image_shape: Tuple[int, int], output_path: str, class_id: int = 1) -> None:
         """
