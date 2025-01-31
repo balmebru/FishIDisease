@@ -83,12 +83,27 @@ Progress report:
 
 
 Below the SAM output and the prompted point:
+
+
 ![First_segmentation_mask_with_prompt](https://github.com/user-attachments/assets/1bf02f43-06bf-44a2-871b-c46828498721)
 
 
+Below the Eye segmentation with manual imput prompt, the fish got detected by the trained yolov11 segmentaton model and the eye location estimated to segment the eye using SAM:
 
 
-  
+![fishdetection](https://github.com/user-attachments/assets/fd72210c-c01c-4b90-8d04-1811457d2516)
+
+
+For the detector of diseased eyes around 10 image per instance (healthy and diseased) got annotated by bounding boxes. This was used to train a yolov11 detection model.
+
+
+![Eye_Detection_healthy](https://github.com/user-attachments/assets/face8a0b-9d79-4a04-b790-c7fae9d50e61)
+![Eye_Detection](https://github.com/user-attachments/assets/9d3c10d8-65ad-43af-b574-5c69bbe40b29)
+
+
+The detection output was not really good unfortunatly. 
+
+
 ### Disease ID 
 The main functionality processes the information extracted during the identification and segmentation step to classify fish health status.
 
