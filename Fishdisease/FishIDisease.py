@@ -97,7 +97,7 @@ class FishIDisease:
 
         return
     
-
+    
     def video_splitter(self, video_path: str, output_dir: str, frame_rate: int):
         """
         Splits a video into individual frames at the specified frame rate.
@@ -190,7 +190,50 @@ class FishIDisease:
         print("Files moved successfully.")
 
 
+    def view_segmentation_SAM_bbox_format(self,image_dir_path, mask_dir_path, output_dir_path):
+        # Ensure the output directory exists
+        if not os.path.exists(output_dir_path):
+            os.makedirs(output_dir_path)
 
+        # Iterate over images and corresponding mask files
+        for image_name, mask_name in zip(os.listdir(image_dir_path), os.listdir(mask_dir_path)):
+            image_path = os.path.join(image_dir_path, image_name)
+            mask_path = os.path.join(mask_dir_path, mask_name)
+            output_path = os.path.join(output_dir_path, image_name)
+            
+            # Read the image
+            image = cv2.imread(image_path)
+            if image is None:
+                print(f"Warning: Unable to read image {image_path}. Skipping...")
+                continue
+
+            # Read the bounding box information from the mask file
+            with open(mask_path, 'r') as file:
+                lines = file.readlines()
+
+            # Parse each line to get the bounding box coordinates
+            for line in lines:
+                class_id, x_center, y_center, width, height = map(float, line.strip().split())
+
+                # Convert YOLO format to OpenCV format
+                img_height, img_width = image.shape[:2]
+                x_center *= img_width
+                y_center *= img_height
+                width *= img_width
+                height *= img_height
+
+                x_min = int(x_center - width / 2)
+                y_min = int(y_center - height / 2)
+                x_max = int(x_center + width / 2)
+                y_max = int(y_center + height / 2)
+
+                # Draw the bounding box on the image
+                cv2.rectangle(image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+
+            # Save the image with bounding boxes to the output directory
+            cv2.imwrite(output_path, image)
+
+        return
 
     def validate_and_sync_directories(self,dir1, dir2):
         """
