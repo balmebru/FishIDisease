@@ -86,6 +86,8 @@ Below the SAM output and the prompted point:
 ![First_segmentation_mask_with_prompt](https://github.com/user-attachments/assets/1bf02f43-06bf-44a2-871b-c46828498721)
 
 
+Below the Eye segmentation with manual imput prompt:
+![fishdetection](https://github.com/user-attachments/assets/fd72210c-c01c-4b90-8d04-1811457d2516)
 
 
   
