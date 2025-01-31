@@ -281,5 +281,7 @@ class FishIDisease:
 
         
         seg_instace = Segmenter()
-        seg_instace.fish_eye_autoannotate_with_SAM(self, image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
+        seg_instace.fish_eye_autoannotate_with_SAM(image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
         return
+    
+    

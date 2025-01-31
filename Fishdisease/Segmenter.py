@@ -105,77 +105,88 @@ class Segmenter:
 
     def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
         """
-        This function uses the yolov11 segmentation model to identify fish in images. In this function draws a
-        bounding box around the fish then uses x,y coordinates to pass the prompt to the SAM model to segment the fish.
-        The x,y coordinates are approximatly at the location where a fish eye is usually located.
-        
+        This function uses the YOLOv8 segmentation model to identify fish in images. It draws a
+        bounding box around the fish, then uses x,y coordinates to pass the prompt to the SAM model
+        to segment the fish. The x,y coordinates are approximately at the location where a fish eye
+        is usually located.
+
         Args:
             image_path (str): Path to the input image.
             sam_model_path (str): Path to the SAM model checkpoint.
-            yolo_model_path (str): Path to the YOLOv11 model checkpoint.
+            yolo_model_path (str): Path to the YOLOv8 model checkpoint.
             show (bool): Whether to display the results.
         """
         
-        # Load the YOLOv11 model
+        # Load the YOLOv8 model
         yolo_model = YOLO(yolo_model_path)
         
         # Load the SAM model
-        sam = sam_model_registry["vit_b"](checkpoint=sam_model_path)
+        sam = sam_model_registry["vit_h"](checkpoint=sam_model_path)
         sam_predictor = SamPredictor(sam)
         
         # Load the image
         image = cv2.imread(image_path)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-        # Run YOLOv11 to get fish bounding boxes
+        # Run YOLOv8 to get fish bounding boxes
         results = yolo_model(image_rgb)
-        detections = results.xyxy[0].numpy()  # Get detections in xyxy format
         
         # Iterate over each detection
-        for detection in detections:
-            x1, y1, x2, y2, conf, cls = detection  # Extract bounding box coordinates
+        for result in results:
+            # Access the boxes object
+            boxes = result.boxes
             
-            # Estimate the eye location (top-left corner of the bounding box)
-            eye_x = x1 + (x2 - x1) * 0.2  # 20% from the left edge of the bbox
-            eye_y = y1 + (y2 - y1) * 0.2  # 20% from the top edge of the bbox
-            
-            # Convert eye location to relative coordinates (normalized to [0, 1])
-            image_height, image_width, _ = image.shape
-            eye_x_rel = eye_x / image_width
-            eye_y_rel = eye_y / image_height
-            
-            # Prepare the input prompt for SAM
-            input_point = np.array([[eye_x, eye_y]])  # SAM expects absolute coordinates
-            input_label = np.array([1])  # 1 indicates a foreground point
-            
-            # Run SAM to segment the fish
-            sam_predictor.set_image(image_rgb)
-            masks, scores, _ = sam_predictor.predict(
-                point_coords=input_point,
-                point_labels=input_label,
-                multimask_output=True,
-            )
-            
-            # Get the best mask (highest score)
-            best_mask = masks[np.argmax(scores)]
-            
-            # Optionally display the results
-            if show:
-                # Draw the bounding box
-                cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+            # Extract bounding box coordinates, confidence, and class IDs
+            for box in boxes:
+                x1, y1, x2, y2 = box.xyxy[0].tolist()  # Get bounding box coordinates in xyxy format
+                conf = box.conf[0].item()  # Get confidence score
+                cls = box.cls[0].item()  # Get class ID
                 
-                # Draw the estimated eye location
-                cv2.circle(image, (int(eye_x), int(eye_y)), 5, (0, 0, 255), -1)
+                # Estimate the eye location (top-left corner of the bounding box)
+                eye_x = x1 + (x2 - x1) * 0.035  # 5% from the left edge of the bbox
+                eye_y = y1 + (y2 - y1) * 0.4  # 30% from the top edge of the bbox
                 
-                # Overlay the segmentation mask
-                color_mask = np.zeros_like(image)
-                color_mask[best_mask > 0] = [0, 255, 0]  # Green mask
-                image = cv2.addWeighted(image, 1, color_mask, 0.5, 0)
+                # Convert eye location to relative coordinates (normalized to [0, 1])
+                image_height, image_width, _ = image.shape
+                eye_x_rel = eye_x / image_width
+                eye_y_rel = eye_y / image_height
                 
-                # Show the image
-                cv2.imshow("Fish Eye Autoannotation", image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                # Prepare the input prompt for SAM
+                input_point = np.array([[eye_x, eye_y]])  # SAM expects absolute coordinates
+                input_label = np.array([1])  # 1 indicates a foreground point
+                
+                # Run SAM to segment the fish
+                sam_predictor.set_image(image_rgb)
+                masks, scores, _ = sam_predictor.predict(
+                    point_coords=input_point,
+                    point_labels=input_label,
+                    multimask_output=True,
+                )
+                
+                # Get the best mask (highest score)
+                best_mask = masks[np.argmax(scores)]
+                
+                # Optionally display the results
+                if show:
+                    # Draw the bounding box
+                    cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                    
+                    # also draw the segmentation mask
+                    color_mask = np.zeros_like(image)   
+                    color_mask[best_mask > 0] = [0, 255, 0]
+                    image = cv2.addWeighted(image, 1, color_mask, 0.5, 0)
+                    
+
+                    # Draw the estimated eye location
+                    cv2.circle(image, (int(eye_x), int(eye_y)), 5, (0, 0, 255), -1)
+                    
+                    # Overlay the segmentation mask
+                    color_mask = np.zeros_like(image)
+                    color_mask[best_mask > 0] = [0, 255, 0]  # Green mask
+                    image = cv2.addWeighted(image, 1, color_mask, 0.5, 0)
+                    
+                    # Show the image
+                    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
 
 
