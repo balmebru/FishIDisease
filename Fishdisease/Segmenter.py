@@ -105,7 +105,7 @@ class Segmenter:
 
     def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False):
         """
-        This function uses the YOLOv8 segmentation model to identify fish in images. It draws a
+        This function uses the YOLOv11 segmentation model to identify fish in images. It draws a
         bounding box around the fish, then uses x,y coordinates to pass the prompt to the SAM model
         to segment the fish. The x,y coordinates are approximately at the location where a fish eye
         is usually located.
@@ -175,7 +175,7 @@ class Segmenter:
                     color_mask = np.zeros_like(image)   
                     color_mask[best_mask > 0] = [0, 255, 0]
                     image = cv2.addWeighted(image, 1, color_mask, 0.5, 0)
-                    
+
 
                     # Draw the estimated eye location
                     cv2.circle(image, (int(eye_x), int(eye_y)), 5, (0, 0, 255), -1)
@@ -190,6 +190,66 @@ class Segmenter:
 
 
 
+    def predict_image(self,image_path, yolo_model_path, show=False):
+        """
+        Predicts objects in an image using a YOLOv11 model.
+
+        Parameters:
+            image_path (str): Path to the input image.
+            yolo_model_path (str): Path to the YOLOv11 model file.
+            show (bool): Whether to display the segmentation results. Default is False.
+
+        Returns:
+            predictions (list): A list of detected objects with their bounding boxes, labels, and confidence scores.
+            segmentation_masks (list): A list of segmentation masks for detected objects.
+        """
+        # Load the YOLOv11 model
+        model = YOLO(yolo_model_path)
+
+        # Perform prediction
+        results = model(image_path)[0]  # Select the first batch result
+
+        # Extract bounding boxes, labels, and confidence scores
+        predictions = []
+        for box in results.boxes:
+            label = model.names[int(box.cls)]
+            bbox = box.xyxy.tolist()[0]
+            confidence = box.conf.tolist()[0]
+            predictions.append({
+                'label': label,
+                'bbox': bbox,
+                'confidence': confidence
+            })
+
+        # Extract segmentation masks (if available)
+        segmentation_masks = []
+        if results.masks:
+            masks_data = results.masks.data.cpu().numpy()
+            for mask in masks_data:
+                segmentation_masks.append(mask)
+
+        # Display the results if requested
+        if show:
+            img = cv2.imread(image_path)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            plt.imshow(img)
+            plt.axis('off')
+            for prediction in predictions:
+                x1, y1, x2, y2 = prediction['bbox']
+                plt.gca().add_patch(
+                    plt.Rectangle((x1, y1), x2 - x1, y2 - y1, 
+                                edgecolor='red', linewidth=2, fill=False)
+                )
+                plt.text(x1, y1 - 5, f"{prediction['label']} {prediction['confidence']:.2f}", 
+                        color='white', backgroundcolor='red', fontsize=8)
+            
+            # Overlay segmentation masks
+            for mask in segmentation_masks:
+                plt.imshow(mask, cmap='jet', alpha=0.3)
+            
+            plt.show()
+
+        return predictions, segmentation_masks,results
 
     def save_sam_to_yolov8_format(self, contours: List[np.ndarray], image_shape: Tuple[int, int], output_path: str, class_id: int = 1) -> None:
         """

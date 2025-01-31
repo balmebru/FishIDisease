@@ -5,6 +5,8 @@ import os
 import cv2
 import numpy as np
 import shutil
+from ultralytics import YOLO
+from matplotlib import pyplot as plt
 
 
 class FishIDisease:
@@ -284,4 +286,13 @@ class FishIDisease:
         seg_instace.fish_eye_autoannotate_with_SAM(image_path=image_path, sam_model_path=sam_model_path, yolo_model_path=yolo_model_path, show=show)
         return
     
-    
+
+    def predict_image(self,image_path, yolo_model_path, show):
+
+        seg_instace = Segmenter()
+
+        predictions, segmentation_masks,results = seg_instace.predict_image(image_path, yolo_model_path,show)
+
+        return predictions, segmentation_masks,results
+
+
