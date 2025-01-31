@@ -250,7 +250,7 @@ class Segmenter:
         return np.array(input_point)
     
 
-    def predict_image(self,image_path, yolo_model_path, show=False, save_path=None):
+    def predict_image(self, image_path, yolo_model_path, show=False, save_image_path=None):
         """
         Predicts objects in an image using a YOLOv11 model.
 
@@ -263,43 +263,77 @@ class Segmenter:
         Returns:
             predictions (list): A list of detected objects with their bounding boxes, labels, and confidence scores.
             segmentation_masks (list): A list of segmentation masks for detected objects.
+            results: The raw YOLO results instance.
         """
         # Load the YOLOv11 model
         model = YOLO(yolo_model_path)
 
+        # Load the image
+        image = cv2.imread(image_path)
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for matplotlib
+
         # Perform prediction
-        results = model.predict(image_path,conf=0.1) # Select the first batch result
+        results = model.predict(image_path, conf=0.1)
 
         # Extract bounding boxes, labels, and confidence scores
         predictions = []
+        segmentation_masks = []
 
         for result in results:
+            # Extract bounding boxes, labels, and confidence scores
+            for box in result.boxes:
+                x_center, y_center, box_width, box_height = box.xywh[0].cpu().numpy()
 
-            preprocessed_img = result.orig_shape
-            letterboxed_img = result.imgs[0]  # YOLO-preprocessed image
+                # Convert (x_center, y_center, width, height) to (x1, y1, x2, y2)
+                x1 = x_center - (box_width / 2)
+                y1 = y_center - (box_height / 2)
+                x2 = x_center + (box_width / 2)
+                y2 = y_center + (box_height / 2)
+
+                label = int(box.cls)
+                confidence = float(box.conf)
+
+                predictions.append({
+                    'bbox': [x1, y1, x2, y2],
+                    'label': label,
+                    'confidence': confidence
+                })
+
             # Extract segmentation masks (if available)
-            segmentation_masks = []
-            if result.masks:
-                masks_data = result.masks.data.cpu().numpy()
-                for mask in masks_data:
-                    segmentation_masks.append(mask)
+            if result.masks is not None:
+                for mask in result.masks:
+                    segmentation_masks.append(mask.data.cpu().numpy())
 
-
-            fig, ax = plt.subplots()
-            ax.imshow(letterboxed_img)
-            ax.axis('off')
+        # Plot the image and overlays
+        fig, ax = plt.subplots()
+        ax.imshow(image_rgb)
+        ax.axis('off')
 
         # Overlay segmentation masks
         for mask in segmentation_masks:
             ax.imshow(mask, cmap='jet', alpha=0.3)
 
-        if show:
-            plt.show()
+        # Overlay bounding boxes
+        for pred in predictions:
+            x1, y1, x2, y2 = pred['bbox']
+            label = pred['label']
+            confidence = pred['confidence']
+
+            # Draw the bounding box
+            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1,
+                                linewidth=1, edgecolor='r', facecolor='none')
+            ax.add_patch(rect)
+
+            # Add label and confidence score
+            ax.text(x1, y1 - 5, f'Label: {label}, Conf: {confidence:.2f}',
+                    color='r', fontsize=8, backgroundcolor='white')
 
         # Save the overlay image if a path is specified
-        if save_path:
-            fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
+        if save_image_path:
+            fig.savefig(save_image_path, bbox_inches='tight', pad_inches=0)
             plt.close(fig)
+
+
 
         return predictions, segmentation_masks, results
 

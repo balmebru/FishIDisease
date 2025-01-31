@@ -200,7 +200,7 @@ class FishIDisease:
             image_path = os.path.join(image_dir_path, image_name)
             mask_path = os.path.join(mask_dir_path, mask_name)
             output_path = os.path.join(output_dir_path, image_name)
-            
+
             # Read the image
             image = cv2.imread(image_path)
             if image is None:
@@ -304,7 +304,7 @@ class FishIDisease:
         for image in os.listdir(image_dir):
             image_path = os.path.join(image_dir, image)
             save_image_path = os.path.join(save_path, image)    
-            predictions, segmentation_masks, results = seg_instace.predict_image(image_path, yolo_model_path,save_path=save_image_path,show=show)
+            predictions, segmentation_masks, results = seg_instace.predict_image(image_path, yolo_model_path,save_image_path=save_image_path,show=show)
 
 
         return 
@@ -318,3 +318,126 @@ class FishIDisease:
         return predictions, segmentation_masks,results
 
 
+    def create_overlay_fish_and_eye(self, image_dir, yolo_fish_segmenter_path, yolo_eye_detector_path, save_path, show=True):
+        # Load models
+        yolo_eye_detector = YOLO(yolo_eye_detector_path)
+        yolo_fish_segmenter = YOLO(yolo_fish_segmenter_path)
+
+        # Create save directory if it doesn't exist
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        # Process each image in the directory
+        for image in os.listdir(image_dir):
+            image_path = os.path.join(image_dir, image)
+            save_image_path = os.path.join(save_path, image)
+
+            # Load the image
+            img = cv2.imread(image_path)
+            # resize the image to 640x480
+
+            img_resized = cv2.resize(img, (640, 480))
+            if img is None:
+                print(f"Error loading image: {image_path}")
+                continue
+
+            # Perform fish segmentation
+            result_fish = yolo_fish_segmenter.predict(image_path)
+            for r in result_fish:
+                if r.masks is not None:
+                    for mask in r.masks:
+                        # Extract the segmentation mask
+                        mask = mask.data[0].cpu().numpy()
+                        mask = (mask > 0.5).astype(np.uint8)  # Binary mask
+
+                        # Create a color mask (e.g., green)
+                        color_mask = np.zeros_like(img_resized)
+                        color_mask[mask == 1] = [0, 255, 0]  # Green color
+
+                        # Blend the mask with the image
+                        img = cv2.addWeighted(img_resized, 1, color_mask, 0.5, 0)
+
+            
+
+            result_eye = yolo_eye_detector.predict(img_resized)
+            for r in result_eye:
+                if r.boxes is not None:
+                    for box in r.boxes:
+                        # Extract bounding box coordinates
+                        x_min, y_min, x_max, y_max = map(int, box.xyxy[0].tolist())
+                        img_height, img_width = img.shape[:2]
+                        print("Image dimensions:", img_width, img_height)
+
+                        # Extract class ID and confidence
+                        class_id = int(box.cls[0].item())
+                        confidence = box.conf[0].item()
+
+                        # Draw bounding box
+                        cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
+
+                        # Put class label and confidence
+                        label = f"Eye {class_id} {confidence:.2f}"
+                        cv2.putText(img, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+
+            # Save the resulting image
+            cv2.imwrite(save_image_path, img)
+
+            # Optionally display the image
+            if show:
+                plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+        return
+    
+
+    def create_comparison_plot_prediction_and_image(self, prediction_dir, image_dir, output_dir):
+        # Create output directory if it doesn't exist
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Get list of images in both directories
+        prediction_images = sorted(os.listdir(prediction_dir))
+        original_images = sorted(os.listdir(image_dir))
+
+        # Ensure the number of images in both directories is the same
+        if len(prediction_images) != len(original_images):
+            print("Warning: The number of images in the prediction and image directories do not match.")
+            return
+
+        # Iterate through each pair of images
+        for pred_image_name, orig_image_name in zip(prediction_images, original_images):
+            # Load images
+            pred_image_path = os.path.join(prediction_dir, pred_image_name)
+            orig_image_path = os.path.join(image_dir, orig_image_name)
+
+            pred_image = cv2.imread(pred_image_path)
+            orig_image = cv2.imread(orig_image_path)
+
+            # Convert BGR to RGB (OpenCV loads images in BGR format)
+            pred_image = cv2.cvtColor(pred_image, cv2.COLOR_BGR2RGB)
+            orig_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB)
+
+            # Create a figure and subplots
+            fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+
+            # Plot original image
+            axes[0].imshow(orig_image)
+            axes[0].set_title("Original Image", fontsize=12, fontweight='bold')
+            axes[0].axis('off')  # Hide axes
+
+            # Plot prediction image
+            axes[1].imshow(pred_image)
+            axes[1].set_title("Prediction Image", fontsize=12, fontweight='bold')
+            axes[1].axis('off')  # Hide axes
+
+            # Add a super title for the entire figure
+            fig.suptitle(f"Comparison: {orig_image_name}", fontsize=14, fontweight='bold', y=1.02)
+
+            # Adjust layout for better spacing
+            plt.tight_layout()
+
+            # Save the figure
+            output_path = os.path.join(output_dir, f"comparison_{orig_image_name}")
+            plt.savefig(output_path, bbox_inches='tight', dpi=300)
+            plt.close()  # Close the figure to free memory
+
+        print(f"Comparison plots saved to: {output_dir}")
