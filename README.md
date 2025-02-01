@@ -125,19 +125,20 @@ The main functionality processes the information extracted during the identifica
 
 ### Dataset description
 
-The main data is collected as images from a aquaculture in switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore the mask extraction should be somewhat easy.
-The dataset contains different pictures:
+The main data is collected as images from aquaculture in Switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore, it is somewhat likely that the model learns to separate based on the white background.
+
+The dataset contains different types of pictures:
 
 - Total data
-      -  FishDisease
-          - EyeDisease
-              - healthy
-              - diseased
-          - Weight
-              - OverOrUnder Weight
-              - Bleeding vs Bloodcirculation
-      - FishCount
-          - videos from inside the tank
+    - FishDisease
+         - EyeDisease
+               - Healthy
+               - Diseased
+    - Weight
+        - Over or Underweight
+    - Bleeding vs Blood Circulation
+    - FishCount
+        - Videos from inside the tank
 
 
 
