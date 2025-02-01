@@ -123,5 +123,17 @@ The dataset contains different pictures:
       - FishCount
           - videos from inside the tank
 
+
+A second data set was used to generate the underwater fish detection. The dataset contains bounding boxes around fishes in underwater videos. There are around 2500 frames from different fish species.
+
+https://alzayats.github.io/DeepFish/
+
+Applying the yolov11 detection model to real underwater videos on which the model was not trained resulted in acceptable preformance (considering different lighting conditions).
+In this case the resizing probably led to lower resolution and therefore might compromise the information extraction.
+
+![image](https://github.com/user-attachments/assets/70e6a829-8569-4ca9-a29b-65b1526eee39)
+
+
+
   
 
