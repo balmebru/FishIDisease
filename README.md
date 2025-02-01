@@ -75,13 +75,6 @@ This step uses the fine-tuned model to detect and segment fish in each frame. Im
 - Extract Mask: Generate and store the segmentation mask for further analysis.
 - Extract Low-Level Features: Measure fish attributes such as redness, size, color patterns, or other relevant indicators for disease detection.
 
-
-Progress report:
-
-- yolov11 detection and segmentation did not work --> switched to pormpt based mask segmentation with sam
-- yolov11 detection plus sam2 segmentation works now --> start to identify fish and segment with sam2
-
-
 Below the SAM output and the prompted point:
 
 
@@ -113,31 +106,6 @@ The main functionality processes the information extracted during the identifica
     - Classify diseases into predefined categories (e.g., fungal infection, bacterial lesion, physical injury).
     - Clustering methods (such as k-means) to identify natural groupings in feature data.
     - Outlier Detection: Flag highly abnormal patterns as potential "unknown" disease categories for manual review.
-
-### High level representation (?)
-
-To make the output actionable, the information needs to be presented in a clear and user-friendly manner.
-
-Information Presentation:
-- Visual overlays on segmented fish images (e.g., highlighting diseased areas in red).(?)
-- Tabular summaries for batch analysis, including health scores, detected issues, and key attributes like redness levels or size deviations.
-- Alerts or flags for critical health concerns.
-
-### Connect sensor information to the Image (?)
-
-Linking sensor data with image analysis can provide context for environmental conditions affecting fish health.
-
-Common Sensors:
-- Turbidity: Measures water clarity, which can affect image quality and fish health.
-- pH: Detects acidity or alkalinity changes, potentially influencing disease prevalence.
-- Dissolved Oxygen: Essential for maintaining fish health.
-- Temperature: Key for identifying stress conditions or optimal ianges for aquaculture.
-  
-Potential Integration:
-Synchronize sensor readings with video timestamps to contextualize disease detection.
-Use metadata fusion techniques to correlate sensor values with observed health issues.
-
-
 
 ### Dataset description
 
