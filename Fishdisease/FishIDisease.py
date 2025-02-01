@@ -14,12 +14,6 @@ class FishIDisease:
         pass
 
 
-    def run_pipeline(self):
-        pass
-
-    def export_results(self, output_path: str):
-        pass
-
     def autoannotate_fish_directory(self, data, detection_model, sam_model, output_dir_fish):
         
 

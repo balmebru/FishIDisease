@@ -14,16 +14,6 @@ class Segmenter:
     def __init__(self):
         pass
 
-    def detect_fish(self, image):
-        pass
-
-    def segment_fish(self, image):
-        return image
-
-    def extract_mask(self, segmented_image):
-        pass
-
-
 
     def autoannotate_fish(self,data,detection_model,sam_model,output_dir_fish):
 
@@ -103,7 +93,7 @@ class Segmenter:
 
 
 
-    def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False, save_path=None):
+    def fish_eye_autoannotate_with_SAM(self, image_path: str, sam_model_path: str, yolo_model_path: str, show=False, save_path=None,x=0.03,y=0.4):
         """
         This function uses the YOLOv11 segmentation model to identify fish in images. It draws a
         bounding box around the fish, then uses x,y coordinates to pass the prompt to the SAM model
@@ -147,8 +137,8 @@ class Segmenter:
                 cls = box.cls[0].item()  # Get class ID
                 
                 # Estimate the eye location (top-left corner of the bounding box)
-                eye_x = x1 + (x2 - x1) * 0.03  # 5% from the left edge of the bbox
-                eye_y = y1 + (y2 - y1) * 0.4  # 30% from the top edge of the bbox
+                eye_x = x1 + (x2 - x1) * x  # 5% from the left edge of the bbox
+                eye_y = y1 + (y2 - y1) * y  # 30% from the top edge of the bbox
                 
                 # Convert eye location to relative coordinates (normalized to [0, 1])
                 image_height, image_width, _ = image.shape
@@ -273,7 +263,7 @@ class Segmenter:
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for matplotlib
 
         # Perform prediction
-        results = model.predict(image_path, conf=0.1)
+        results = model.predict(image_path, conf=0.5)
 
         # Extract bounding boxes, labels, and confidence scores
         predictions = []
@@ -366,6 +356,20 @@ class Segmenter:
         return
     
     def show_mask(self,mask, ax, random_color=False):
+
+        """
+        Helper function to show a mask on an image. Takes a defined color or a random color.
+        Reshapes the mask to the image size and then shows the mask on the image.
+
+        Copied from the SAM documentation.
+
+        Args:
+            mask (np.ndarray): Mask to show.
+            ax (matplotlib.axes.Axes): Matplotlib axis object.
+            random_color (bool): Whether to use a random color for the mask. Default is False.
+        
+        """
+
         if random_color:
             color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
         else:
@@ -375,6 +379,18 @@ class Segmenter:
         ax.imshow(mask_image)
 
     def show_points(self,coords, labels, ax, marker_size=375):
+        """
+        Helper function for SAM to show points on an image.
+        
+        Copied from the SAM documentation.
+
+        Args:
+            coords (np.ndarray): Array of point coordinates.
+            labels (np.ndarray): Array of point labels.
+            ax (matplotlib.axes.Axes): Matplotlib axis object.
+            marker_size (int): Size of the marker.
+        
+        """
         pos_points = coords[labels==1]
         neg_points = coords[labels==0]
         ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)

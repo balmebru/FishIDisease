@@ -11,8 +11,6 @@ class Preprocessor:
     def __init__(self):
         pass
 
-    def background_subtraction(self, image):
-        return image
 
     def apply_denoising(self, image):
         """
