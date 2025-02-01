@@ -110,8 +110,8 @@ Applying the yolov11 detection model to real underwater videos on which the mode
 The main issue is now two fold:
 
 - Determine the correct detection "depth" for multiple fishes behind each other (possibly applying a binary filter).
-- Create a validation step if a picture is even valid
-- Create a validation step if a mask is valid to be further processed
+- Create a validation step to determine if a picture is even valid
+- Create a validation step if a mask is valid
 
 ### Disease ID 
 The main functionality processes the information extracted during the identification and segmentation step to classify fish health status.
