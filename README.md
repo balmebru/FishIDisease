@@ -93,7 +93,7 @@ For the detector of diseased eyes around 10 image per instance (healthy and dise
 ![Eye_Detection_healthy](https://github.com/user-attachments/assets/face8a0b-9d79-4a04-b790-c7fae9d50e61)
 ![Eye_Detection](https://github.com/user-attachments/assets/9d3c10d8-65ad-43af-b574-5c69bbe40b29)
 
-The model can detect other fish species (but maybe because of the white background) and the eye of other fish. This indicates the model can determine "eyes" correctly. 
+The model can detect other fish species (but maybe because of the white background) and the eye of other fish not in the traininng data. This indicates the model can detect a fishes eye correctly. 
 
 ![image](https://github.com/user-attachments/assets/e5af6a5e-1827-4308-aaa9-50deefef1474)
 
