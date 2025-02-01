@@ -93,8 +93,18 @@ For the detector of diseased eyes around 10 image per instance (healthy and dise
 ![Eye_Detection_healthy](https://github.com/user-attachments/assets/face8a0b-9d79-4a04-b790-c7fae9d50e61)
 ![Eye_Detection](https://github.com/user-attachments/assets/9d3c10d8-65ad-43af-b574-5c69bbe40b29)
 
+The model can detect other fish species (but maybe because of the white background) and the eye of other fish. This indicates the model can determine "eyes" correctly. 
 
-The detection output was not really good unfortunatly. 
+![image](https://github.com/user-attachments/assets/e5af6a5e-1827-4308-aaa9-50deefef1474)
+
+
+
+
+A second data set was used to generate the underwater fish detection because the inital model trained on the example dataset (with fishes on white background) could not detect fishes in real underwater videos. The dataset (https://alzayats.github.io/DeepFish/) contains bounding boxes around fishes in underwater videos. There are around 2500 frames from different fish species.
+
+Applying the yolov11 detection model to real underwater videos on which the model was not trained resulted in acceptable preformance (considering different lighting conditions).
+
+![image](https://github.com/user-attachments/assets/70e6a829-8569-4ca9-a29b-65b1526eee39)
 
 
 ### Disease ID 
@@ -123,15 +133,6 @@ The dataset contains different pictures:
       - FishCount
           - videos from inside the tank
 
-
-A second data set was used to generate the underwater fish detection. The dataset contains bounding boxes around fishes in underwater videos. There are around 2500 frames from different fish species.
-
-https://alzayats.github.io/DeepFish/
-
-Applying the yolov11 detection model to real underwater videos on which the model was not trained resulted in acceptable preformance (considering different lighting conditions).
-In this case the resizing probably led to lower resolution and therefore might compromise the information extraction.
-
-![image](https://github.com/user-attachments/assets/70e6a829-8569-4ca9-a29b-65b1526eee39)
 
 
 
