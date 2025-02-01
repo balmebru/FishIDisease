@@ -75,13 +75,6 @@ This step uses the fine-tuned model to detect and segment fish in each frame. Im
 - Extract Mask: Generate and store the segmentation mask for further analysis.
 - Extract Low-Level Features: Measure fish attributes such as redness, size, color patterns, or other relevant indicators for disease detection.
 
-
-Progress report:
-
-- yolov11 detection and segmentation did not work --> switched to pormpt based mask segmentation with sam
-- yolov11 detection plus sam2 segmentation works now --> start to identify fish and segment with sam2
-
-
 Below the SAM output and the prompted point:
 
 
@@ -100,9 +93,25 @@ For the detector of diseased eyes around 10 image per instance (healthy and dise
 ![Eye_Detection_healthy](https://github.com/user-attachments/assets/face8a0b-9d79-4a04-b790-c7fae9d50e61)
 ![Eye_Detection](https://github.com/user-attachments/assets/9d3c10d8-65ad-43af-b574-5c69bbe40b29)
 
+The model can detect other fish species (but maybe because of the white background) and the eye of other fish not in the traininng data. This indicates the model can detect a fishes eye correctly. 
 
-The detection output was not really good unfortunatly. 
+![image](https://github.com/user-attachments/assets/e5af6a5e-1827-4308-aaa9-50deefef1474)
 
+
+
+
+A second data set was used to generate the underwater fish detection because the inital model trained on the example dataset (with fishes on white background) could not detect fishes in real underwater videos. The dataset (https://alzayats.github.io/DeepFish/) contains bounding boxes around fishes in underwater videos. There are around 2500 frames from different fish species.
+
+Applying the yolov11 detection model to real underwater videos on which the model was not trained resulted in acceptable preformance (considering different lighting conditions).
+
+![image](https://github.com/user-attachments/assets/70e6a829-8569-4ca9-a29b-65b1526eee39)
+
+
+The main issue is now two fold:
+
+- Determine the correct detection "depth" for multiple fishes behind each other (possibly applying a binary filter).
+- Create a validation step to determine if a picture is even valid
+- Create a validation step if a mask is valid
 
 ### Disease ID 
 The main functionality processes the information extracted during the identification and segmentation step to classify fish health status.
@@ -114,46 +123,25 @@ The main functionality processes the information extracted during the identifica
     - Clustering methods (such as k-means) to identify natural groupings in feature data.
     - Outlier Detection: Flag highly abnormal patterns as potential "unknown" disease categories for manual review.
 
-### High level representation (?)
-
-To make the output actionable, the information needs to be presented in a clear and user-friendly manner.
-
-Information Presentation:
-- Visual overlays on segmented fish images (e.g., highlighting diseased areas in red).(?)
-- Tabular summaries for batch analysis, including health scores, detected issues, and key attributes like redness levels or size deviations.
-- Alerts or flags for critical health concerns.
-
-### Connect sensor information to the Image (?)
-
-Linking sensor data with image analysis can provide context for environmental conditions affecting fish health.
-
-Common Sensors:
-- Turbidity: Measures water clarity, which can affect image quality and fish health.
-- pH: Detects acidity or alkalinity changes, potentially influencing disease prevalence.
-- Dissolved Oxygen: Essential for maintaining fish health.
-- Temperature: Key for identifying stress conditions or optimal ianges for aquaculture.
-  
-Potential Integration:
-Synchronize sensor readings with video timestamps to contextualize disease detection.
-Use metadata fusion techniques to correlate sensor values with observed health issues.
-
-
-
 ### Dataset description
 
-The main data is collected as images from a aquaculture in switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore the mask extraction should be somewhat easy.
-The dataset contains different pictures:
+The main data is collected as images from aquaculture in Switzerland. The pictures of the fish are taken as sideways full pictures on a white cutting board. Therefore, it is somewhat likely that the model learns to separate based on the white background.
+
+The dataset contains different types of pictures:
 
 - Total data
-      -  FishDisease
-          - EyeDisease
-              - healthy
-              - diseased
-          - Weight
-              - OverOrUnder Weight
-              - Bleeding vs Bloodcirculation
-      - FishCount
-          - videos from inside the tank
+    - FishDisease
+         - EyeDisease
+               - Healthy
+               - Diseased
+    - Weight
+        - Over or Underweight
+    - Bleeding vs Blood Circulation
+    - FishCount
+        - Videos from inside the tank
+
+
+
 
   
 
